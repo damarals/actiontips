@@ -117,7 +117,7 @@ get_stats_table <- function(tippers_id = NA, verbose = FALSE) {
                str_detect(name, "user_id|win|loss|count"),
                str_detect(name, "user_id|mlb|mlb|nba|nfl|nhl|ncaab"),
                str_detect(name, "user_id|records"),
-               !str_detect(name, "today|yesterday|start|verified|picks")) |>
+               !str_detect(name, "today|yesterday|start|verified|[Pp]icks")) |>
         pivot_wider(everything()) |>
         rename_all(list(~ str_remove(., "pick_stats.pick_stats."))) |>
         pivot_longer(-user_id, names_to = "name", values_to = "value") |>
