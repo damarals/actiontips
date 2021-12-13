@@ -13,7 +13,7 @@ by \code{get_json} function call.}
 \value{
 a \code{tibble} with 6 columns
 \describe{
-\item{pick_id}{unique id of the tip}
+\item{tip_id}{unique id of the tip}
 \item{tipper_id}{unique id of the tipper}
 \item{game_id}{unique id of the game where the tip is on}
 \item{created_at}{date where the tip has created}
@@ -28,5 +28,5 @@ Returns a tibble with id, league, periods and W/L of tips
 }
 \examples{
 json <- get_json(tipper_id = "184328")
-get_stats_table(json = json)
+get_tips_table(json = json)
 }

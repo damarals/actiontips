@@ -9,7 +9,7 @@
 #'
 #' @importFrom rvest read_html html_node html_text
 #' @importFrom jsonlite fromJSON
-#' @importFrom purrr pluck possibly
+#' @importFrom purrr pluck
 #' @importFrom glue glue
 #' @importFrom tibble enframe
 #' @importFrom stringr str_count str_detect str_remove
@@ -19,13 +19,15 @@
 #'
 #' @examples
 #' get_json(tipper_id = "184328")
-get_json <- possibly(function(tipper_id) {
-  glue('https://www.actionnetwork.com/picks/profile/{tipper_id}') |>
-    read_html() |>
-    html_node(xpath = '//*[@id="__NEXT_DATA__"]') |>
-    html_text() |>
-    fromJSON()
-}, otherwise = NULL)
+get_json <- function(tipper_id) {
+  tryCatch({
+    glue('https://www.actionnetwork.com/picks/profile/{tipper_id}') |>
+      read_html() |>
+      html_node(xpath = '//*[@id="__NEXT_DATA__"]') |>
+      html_text() |>
+      fromJSON()
+  }, error = function(e) NULL)
+}
 
 #' Tipper Table Summary
 #'
@@ -54,21 +56,19 @@ get_json <- possibly(function(tipper_id) {
 #' @examples
 #' json <- get_json(tipper_id = "184328")
 #' get_tipper_table(json = json)
-get_tipper_table <- possibly(function(json) {
-  json |>
-    pluck("props", "pageProps", "profile") |>
-    unlist() |> enframe() |>
-    filter(str_count(name, r"{\.}") <= 1) |>
-    pivot_wider(everything()) |>
-    transmute(tipper_id = user_id, name, is_expert, is_author,
-              is_verified, num_followers = num_followers.total)
-}, otherwise = {
+get_tipper_table <- function(json) {
   column_names <- c("tipper_id", "name", "is_expert", "is_author",
                     "is_verified", "num_followers")
-  args <- purrr::map(column_names, ~ character())
-  names(args) <- column_names
-  do.call(tibble::tibble, args)
-})
+  tryCatch({
+    json |>
+      pluck("props", "pageProps", "profile") |>
+      unlist() |> enframe() |>
+      filter(str_count(name, r"{\.}") <= 1) |>
+      pivot_wider(everything()) |>
+      transmute(tipper_id = user_id, name, is_expert, is_author,
+                is_verified, num_followers = num_followers.total)
+  }, error = function(e) empty_tibble(column_names))
+}
 
 #' Tipper Stats Table
 #'
@@ -98,28 +98,26 @@ get_tipper_table <- possibly(function(json) {
 #' @examples
 #' json <- get_json(tipper_id = "184328")
 #' get_stats_table(json = json)
-get_stats_table <- possibly(function(json) {
-  json |>
-    pluck("props", "pageProps", "profile") |>
-    unlist() |> enframe() |>
-    filter(str_detect(name, "user_id|pick_stats"),
-           str_detect(name, "user_id|win|loss|count"),
-           str_detect(name, "user_id|mlb|mlb|nba|nfl|nhl|ncaab"),
-           str_detect(name, "user_id|records"),
-           !str_detect(name, "today|yesterday|start|verified|picks")) |>
-    pivot_wider(everything()) |>
-    rename_all(list(~ str_remove(., "pick_stats.pick_stats."))) |>
-    pivot_longer(-user_id, names_to = "name", values_to = "value") |>
-    mutate(name = str_remove(name, ".records")) |>
-    separate(name, into = c("league", "period", "stat"), sep = r"{\.}") |>
-    pivot_wider(names_from = stat, values_from = value) |>
-    rename(tipper_id = user_id)
-}, otherwise = {
+get_stats_table <- function(json) {
   column_names <- c("tipper_id", "league", "period", "win", "loss", "count")
-  args <- purrr::map(column_names, ~ character())
-  names(args) <- column_names
-  do.call(tibble::tibble, args)
-})
+  tryCatch({
+    json |>
+      pluck("props", "pageProps", "profile") |>
+      unlist() |> enframe() |>
+      filter(str_detect(name, "user_id|pick_stats"),
+             str_detect(name, "user_id|win|loss|count"),
+             str_detect(name, "user_id|mlb|mlb|nba|nfl|nhl|ncaab"),
+             str_detect(name, "user_id|records"),
+             !str_detect(name, "today|yesterday|start|verified|picks")) |>
+      pivot_wider(everything()) |>
+      rename_all(list(~ str_remove(., "pick_stats.pick_stats."))) |>
+      pivot_longer(-user_id, names_to = "name", values_to = "value") |>
+      mutate(name = str_remove(name, ".records")) |>
+      separate(name, into = c("league", "period", "stat"), sep = r"{\.}") |>
+      pivot_wider(names_from = stat, values_from = value) |>
+      rename(tipper_id = user_id)
+  }, error = function(e) empty_tibble(column_names))
+}
 
 #' Tipper Tips Table
 #'
@@ -146,17 +144,15 @@ get_stats_table <- possibly(function(json) {
 #'
 #' @examples
 #' json <- get_json(tipper_id = "184328")
-#' get_stats_table(json = json)
-get_tips_table <- possibly(function(json) {
-  json |>
-    pluck("props", "pageProps", "profile", "picks") |>
-    transmute(tip_id = id, tipper_id = user_id, game_id,
-              created_at, updated_at, league = league_name,
-              tip_play = play, tip_type = type)
-}, otherwise = {
+#' get_tips_table(json = json)
+get_tips_table <- function(json) {
   column_names <- c("tip_id", "tipper_id", "game_id", "created_at",
                     "updated_at", "league", "tip_play", "tip_type")
-  args <- purrr::map(column_names, ~ character())
-  names(args) <- column_names
-  do.call(tibble::tibble, args)
-})
+  tryCatch({
+    json |>
+      pluck("props", "pageProps", "profile", "picks") |>
+      transmute(tip_id = id, tipper_id = user_id, game_id,
+                created_at, updated_at, league = league_name,
+                tip_play = play, tip_type = type)
+  }, error = function(e) empty_tibble(column_names))
+}
