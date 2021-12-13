@@ -1,5 +1,5 @@
 # config parallel processing
-future::plan(future::multisession, workers = 15)
+future::plan(future::multisession, workers = 20)
 
 # update tippers
 tictoc::tic()
