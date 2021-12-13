@@ -100,7 +100,7 @@ get_tippers_table <- function(tippers_id = NA, verbose = FALSE) {
 #' @importFrom stringr str_detect str_remove
 #' @importFrom tidyr pivot_wider pivot_longer separate
 #' @importFrom dplyr mutate mutate_at everything
-#' filter rename
+#' filter rename select
 #'
 #' @examples
 #' get_stats_table(tippers_id = c(184328, 184329))

@@ -1,21 +1,11 @@
 # config parallel processing
-future::plan(future::multisession, workers = 20)
+future::plan(future::multisession, workers = 6)
 
 # update tippers
-tictoc::tic()
-tipper <- actiontips::get_tippers_table(tippers_id = 1:100000, verbose = TRUE)
-tictoc::toc()
-
-Sys.sleep(60)
+tipper <- actiontips::get_tippers_table(tippers_id = 1:100, verbose = TRUE)
 
 # update stats
-tictoc::tic()
-stat <- actiontips::get_stats_table(tippers_id = 1:100000, verbose = TRUE)
-tictoc::toc()
-
-Sys.sleep(60)
+stat <- actiontips::get_stats_table(tippers_id = 1:100, verbose = TRUE)
 
 # update tips
-tictoc::tic()
-tip <- actiontips::get_tips_table(tippers_id = 1:100000, verbose = TRUE)
-tictoc::toc()
+tip <- actiontips::get_tips_table(tippers_id = 1:100, verbose = TRUE)
