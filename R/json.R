@@ -71,7 +71,7 @@ get_tippers_table <- function(tippers_id = NA, verbose = FALSE) {
                   is_verified, num_followers = num_followers.total) |>
         mutate_at(c(1, 6), ~ as.integer(.)) |>
         mutate_at(2, ~ as.character(.)) |>
-        mutate_at(3:5, ~ as.logical(.)) |>
+        mutate_at(3:5, ~ as.logical(.))
     }, error = function(e) empty_tibble(column_names, column_types))
   }, .progress = verbose)
 }
