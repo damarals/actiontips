@@ -4,10 +4,12 @@
 \alias{get_tips_table}
 \title{Tippers Tips Table}
 \usage{
-get_tips_table(tippers_id)
+get_tips_table(tippers_id = NA, verbose = FALSE)
 }
 \arguments{
 \item{tippers_id}{A vector with all tippers id's you want tips.}
+
+\item{verbose}{Logical indication showing scrapping progress bar}
 }
 \value{
 a \code{tibble} with 6 columns
