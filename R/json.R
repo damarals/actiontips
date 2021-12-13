@@ -29,12 +29,12 @@ get_json <- function(tipper_id) {
   }, error = function(e) NULL)
 }
 
-#' Tipper Table Summary
+#' Tippers Table Summary
 #'
-#' Returns a tibble with id, name and others informations
+#' Returns a tibble with id, name and others informations of each
+#' tipper requested
 #'
-#' @param json The json data of the tipper you want information, obtained
-#' by \code{get_json} function call.
+#' @param tippers_id A vector with all tippers id's you want information.
 #'
 #' @return a \code{tibble} with 6 columns
 #' \describe{
@@ -47,35 +47,35 @@ get_json <- function(tipper_id) {
 #' }
 #' @export
 #'
-#' @importFrom purrr pluck
+#' @importFrom purrr pluck map_dfr
 #' @importFrom tibble enframe
 #' @importFrom stringr str_count
 #' @importFrom tidyr pivot_wider
 #' @importFrom dplyr transmute everything filter
 #'
 #' @examples
-#' json <- get_json(tipper_id = "184328")
-#' get_tipper_table(json = json)
-get_tipper_table <- function(json) {
+#' get_tippers_table(tippers_id = c(184328, 184329))
+get_tippers_table <- function(tippers_id) {
   column_names <- c("tipper_id", "name", "is_expert", "is_author",
                     "is_verified", "num_followers")
-  tryCatch({
-    json |>
-      pluck("props", "pageProps", "profile") |>
-      unlist() |> enframe() |>
-      filter(str_count(name, r"{\.}") <= 1) |>
-      pivot_wider(everything()) |>
-      transmute(tipper_id = user_id, name, is_expert, is_author,
-                is_verified, num_followers = num_followers.total)
-  }, error = function(e) empty_tibble(column_names))
+  map_dfr(tippers_id, function(tipper_id) {
+    tryCatch({
+      get_json(tipper_id) |>
+        pluck("props", "pageProps", "profile") |>
+        unlist() |> enframe() |>
+        filter(str_count(name, r"{\.}") <= 1) |>
+        pivot_wider(everything()) |>
+        transmute(tipper_id = user_id, name, is_expert, is_author,
+                  is_verified, num_followers = num_followers.total)
+    }, error = function(e) empty_tibble(column_names))
+  })
 }
 
-#' Tipper Stats Table
+#' Tippers Stats Table
 #'
 #' Returns a tibble with id, league, periods and W/L of tips
 #'
-#' @param json The json data of the tipper you want stats, obtained
-#' by \code{get_json} function call.
+#' @param tippers_id A vector with all tippers id's you want stats.
 #'
 #' @return a \code{tibble} with 6 columns
 #' \describe{
@@ -88,7 +88,7 @@ get_tipper_table <- function(json) {
 #' }
 #' @export
 #'
-#' @importFrom purrr pluck
+#' @importFrom purrr pluck map_dfr
 #' @importFrom tibble enframe
 #' @importFrom stringr str_detect str_remove
 #' @importFrom tidyr pivot_wider pivot_longer separate
@@ -96,35 +96,35 @@ get_tipper_table <- function(json) {
 #' filter rename
 #'
 #' @examples
-#' json <- get_json(tipper_id = "184328")
-#' get_stats_table(json = json)
-get_stats_table <- function(json) {
+#' get_stats_table(tippers_id = c(184328, 184329))
+get_stats_table <- function(tippers_id) {
   column_names <- c("tipper_id", "league", "period", "win", "loss", "count")
-  tryCatch({
-    json |>
-      pluck("props", "pageProps", "profile") |>
-      unlist() |> enframe() |>
-      filter(str_detect(name, "user_id|pick_stats"),
-             str_detect(name, "user_id|win|loss|count"),
-             str_detect(name, "user_id|mlb|mlb|nba|nfl|nhl|ncaab"),
-             str_detect(name, "user_id|records"),
-             !str_detect(name, "today|yesterday|start|verified|picks")) |>
-      pivot_wider(everything()) |>
-      rename_all(list(~ str_remove(., "pick_stats.pick_stats."))) |>
-      pivot_longer(-user_id, names_to = "name", values_to = "value") |>
-      mutate(name = str_remove(name, ".records")) |>
-      separate(name, into = c("league", "period", "stat"), sep = r"{\.}") |>
-      pivot_wider(names_from = stat, values_from = value) |>
-      rename(tipper_id = user_id)
-  }, error = function(e) empty_tibble(column_names))
+  map_dfr(tippers_id, function(tipper_id) {
+    tryCatch({
+      get_json(tipper_id) |>
+        pluck("props", "pageProps", "profile") |>
+        unlist() |> enframe() |>
+        filter(str_detect(name, "user_id|pick_stats"),
+               str_detect(name, "user_id|win|loss|count"),
+               str_detect(name, "user_id|mlb|mlb|nba|nfl|nhl|ncaab"),
+               str_detect(name, "user_id|records"),
+               !str_detect(name, "today|yesterday|start|verified|picks")) |>
+        pivot_wider(everything()) |>
+        rename_all(list(~ str_remove(., "pick_stats.pick_stats."))) |>
+        pivot_longer(-user_id, names_to = "name", values_to = "value") |>
+        mutate(name = str_remove(name, ".records")) |>
+        separate(name, into = c("league", "period", "stat"), sep = r"{\.}") |>
+        pivot_wider(names_from = stat, values_from = value) |>
+        rename(tipper_id = user_id)
+    }, error = function(e) empty_tibble(column_names))
+  })
 }
 
-#' Tipper Tips Table
+#' Tippers Tips Table
 #'
 #' Returns a tibble with id, league, periods and W/L of tips
 #'
-#' @param json The json data of the tipper you want tips, obtained
-#' by \code{get_json} function call.
+#' @param tippers_id A vector with all tippers id's you want tips.
 #'
 #' @return a \code{tibble} with 6 columns
 #' \describe{
@@ -139,20 +139,21 @@ get_stats_table <- function(json) {
 #' }
 #' @export
 #'
-#' @importFrom purrr pluck
+#' @importFrom purrr pluck map_dfr
 #' @importFrom dplyr transmute
 #'
 #' @examples
-#' json <- get_json(tipper_id = "184328")
-#' get_tips_table(json = json)
-get_tips_table <- function(json) {
+#' get_tips_table(tippers_id = c(184328, 184329))
+get_tips_table <- function(tippers_id) {
   column_names <- c("tip_id", "tipper_id", "game_id", "created_at",
                     "updated_at", "league", "tip_play", "tip_type")
-  tryCatch({
-    json |>
-      pluck("props", "pageProps", "profile", "picks") |>
-      transmute(tip_id = id, tipper_id = user_id, game_id,
-                created_at, updated_at, league = league_name,
-                tip_play = play, tip_type = type)
-  }, error = function(e) empty_tibble(column_names))
+  map_dfr(tippers_id, function(tipper_id) {
+    tryCatch({
+      get_json(tipper_id) |>
+        pluck("props", "pageProps", "profile", "picks") |>
+        transmute(tip_id = id, tipper_id = user_id, game_id,
+                  created_at, updated_at, league = league_name,
+                  tip_play = play, tip_type = type)
+    }, error = function(e) empty_tibble(column_names))
+  })
 }

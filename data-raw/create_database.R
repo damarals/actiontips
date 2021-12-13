@@ -1,9 +1,8 @@
 # generic data for create sql schema
 library(actiontips)
-json <- get_json(184328)
-tipper <- get_tipper_table(json)
-stat <- get_stats_table(json)
-tip <- get_tips_table(json)
+tipper <- get_tippers_table(184328)
+stat <- get_stats_table(184328)
+tip <- get_tips_table(184328)
 
 # duckdb connect memory sql
 library(DBI)

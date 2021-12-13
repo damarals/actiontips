@@ -2,13 +2,12 @@
 % Please edit documentation in R/json.R
 \name{get_tips_table}
 \alias{get_tips_table}
-\title{Tipper Tips Table}
+\title{Tippers Tips Table}
 \usage{
-get_tips_table(json)
+get_tips_table(tippers_id)
 }
 \arguments{
-\item{json}{The json data of the tipper you want tips, obtained
-by \code{get_json} function call.}
+\item{tippers_id}{A vector with all tippers id's you want tips.}
 }
 \value{
 a \code{tibble} with 6 columns
@@ -27,6 +26,5 @@ a \code{tibble} with 6 columns
 Returns a tibble with id, league, periods and W/L of tips
 }
 \examples{
-json <- get_json(tipper_id = "184328")
-get_tips_table(json = json)
+get_tips_table(tippers_id = c(184328, 184329))
 }
