@@ -99,7 +99,7 @@ get_tippers_table <- function(tippers_id = NA, verbose = FALSE) {
 #' @importFrom tibble enframe
 #' @importFrom stringr str_detect str_remove
 #' @importFrom tidyr pivot_wider pivot_longer separate
-#' @importFrom dplyr mutate mutate_at everything
+#' @importFrom dplyr mutate mutate_at everything rename_all
 #' filter rename select
 #'
 #' @examples
