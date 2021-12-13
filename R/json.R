@@ -9,26 +9,22 @@
 #'
 #' @importFrom rvest read_html html_node html_text
 #' @importFrom jsonlite fromJSON
-#' @importFrom purrr pluck
 #' @importFrom glue glue
-#' @importFrom tibble enframe
-#' @importFrom stringr str_count str_detect str_remove
-#' @importFrom tidyr pivot_wider pivot_longer separate
-#' @importFrom dplyr mutate rename_all transmute everything
-#' filter rename
 #'
 #' @examples
 #' get_json(tipper_id = "184328")
 get_json <- function(tipper_id) {
-  tryCatch({
-    u <- url(glue('https://www.actionnetwork.com/picks/profile/{tipper_id}'), "rb")
-    result <- read_html(u) |>
-      html_node(xpath = '//*[@id="__NEXT_DATA__"]') |>
-      html_text() |>
-      fromJSON()
-    close(u)
-    return(result)
-  }, error = function(e) NULL)
+  suppressWarnings({
+    tryCatch({
+      u <- url(glue('https://www.actionnetwork.com/picks/profile/{tipper_id}'), "rb")
+      result <- read_html(u) |>
+        html_node(xpath = '//*[@id="__NEXT_DATA__"]') |>
+        html_text() |>
+        fromJSON()
+      close(u)
+      return(result)
+    }, error = function(e) NULL)
+  })
 }
 
 #' Tippers Table Summary
@@ -37,6 +33,7 @@ get_json <- function(tipper_id) {
 #' tipper requested
 #'
 #' @param tippers_id A vector with all tippers id's you want information.
+#' @param verbose Logical indication showing scrapping progress bar
 #'
 #' @return a \code{tibble} with 6 columns
 #' \describe{
@@ -49,7 +46,8 @@ get_json <- function(tipper_id) {
 #' }
 #' @export
 #'
-#' @importFrom purrr pluck map_dfr
+#' @importFrom furrr future_map_dfr
+#' @importFrom purrr pluck
 #' @importFrom tibble enframe
 #' @importFrom stringr str_count
 #' @importFrom tidyr pivot_wider
@@ -57,12 +55,12 @@ get_json <- function(tipper_id) {
 #'
 #' @examples
 #' get_tippers_table(tippers_id = c(184328, 184329))
-get_tippers_table <- function(tippers_id) {
+get_tippers_table <- function(tippers_id = NA, verbose = FALSE) {
   column_names <- c("tipper_id", "name", "is_expert", "is_author",
                     "is_verified", "num_followers")
   column_types <- c("integer", "character", "logical", "logical",
                     "logical", "integer")
-  map_dfr(tippers_id, function(tipper_id) {
+  future_map_dfr(tippers_id, function(tipper_id) {
     tryCatch({
       get_json(tipper_id) |>
         pluck("props", "pageProps", "profile") |>
@@ -75,7 +73,7 @@ get_tippers_table <- function(tippers_id) {
         mutate_at(2, ~ as.character(.)) |>
         mutate_at(3:5, ~ as.logical(.))
     }, error = function(e) empty_tibble(column_names, column_types))
-  })
+  }, .progress = verbose)
 }
 
 #' Tippers Stats Table
@@ -83,6 +81,7 @@ get_tippers_table <- function(tippers_id) {
 #' Returns a tibble with id, league, periods and W/L of tips
 #'
 #' @param tippers_id A vector with all tippers id's you want stats.
+#' @param verbose Logical indication showing scrapping progress bar
 #'
 #' @return a \code{tibble} with 6 columns
 #' \describe{
@@ -95,7 +94,8 @@ get_tippers_table <- function(tippers_id) {
 #' }
 #' @export
 #'
-#' @importFrom purrr pluck map_dfr
+#' @importFrom furrr future_map_dfr
+#' @importFrom purrr pluck
 #' @importFrom tibble enframe
 #' @importFrom stringr str_detect str_remove
 #' @importFrom tidyr pivot_wider pivot_longer separate
@@ -104,11 +104,11 @@ get_tippers_table <- function(tippers_id) {
 #'
 #' @examples
 #' get_stats_table(tippers_id = c(184328, 184329))
-get_stats_table <- function(tippers_id) {
+get_stats_table <- function(tippers_id = NA, verbose = FALSE) {
   column_names <- c("tipper_id", "league", "period", "win", "loss", "count")
   column_types <- c("integer", "character", "character", "integer",
                     "integer", "integer")
-  map_dfr(tippers_id, function(tipper_id) {
+  future_map_dfr(tippers_id, function(tipper_id) {
     tryCatch({
       get_json(tipper_id) |>
         pluck("props", "pageProps", "profile") |>
@@ -128,7 +128,7 @@ get_stats_table <- function(tippers_id) {
         mutate_at(c(1, 4:6), ~ as.integer(.)) |>
         mutate_at(2:3, ~ as.character(.))
     }, error = function(e) empty_tibble(column_names, column_types))
-  })
+  }, .progress = verbose)
 }
 
 #' Tippers Tips Table
@@ -136,6 +136,7 @@ get_stats_table <- function(tippers_id) {
 #' Returns a tibble with id, league, periods and W/L of tips
 #'
 #' @param tippers_id A vector with all tippers id's you want tips.
+#' @param verbose Logical indication showing scrapping progress bar
 #'
 #' @return a \code{tibble} with 6 columns
 #' \describe{
@@ -150,18 +151,19 @@ get_stats_table <- function(tippers_id) {
 #' }
 #' @export
 #'
-#' @importFrom purrr pluck map_dfr
+#' @importFrom furrr future_map_dfr
+#' @importFrom purrr pluck
 #' @importFrom dplyr transmute mutate_at
 #' @importFrom lubridate ymd_hms
 #'
 #' @examples
 #' get_tips_table(tippers_id = c(184328, 184329))
-get_tips_table <- function(tippers_id) {
+get_tips_table <- function(tippers_id = NA, verbose = FALSE) {
   column_names <- c("tip_id", "tipper_id", "game_id", "created_at",
                     "updated_at", "league", "tip_play", "tip_type")
   column_types <- c("integer", "integer", "integer", "character",
                     "character", "character", "character", "character")
-  map_dfr(tippers_id, function(tipper_id) {
+  future_map_dfr(tippers_id, function(tipper_id) {
     tryCatch({
       get_json(tipper_id) |>
         pluck("props", "pageProps", "profile", "picks") |>
@@ -171,5 +173,5 @@ get_tips_table <- function(tippers_id) {
         mutate_at(1:3, ~ as.integer(.)) |>
         mutate_at(4:8, ~ as.character(.))
     }, error = function(e) empty_tibble(column_names, column_types))
-  }) |> mutate_at(4:5, ~ ymd_hms(.))
+  }, .progress = verbose) |> mutate_at(4:5, ~ ymd_hms(.))
 }
