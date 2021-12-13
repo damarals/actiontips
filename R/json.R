@@ -58,6 +58,8 @@ get_json <- function(tipper_id) {
 get_tippers_table <- function(tippers_id) {
   column_names <- c("tipper_id", "name", "is_expert", "is_author",
                     "is_verified", "num_followers")
+  column_types <- c("integer", "character", "logical", "logical",
+                    "logical", "integer")
   map_dfr(tippers_id, function(tipper_id) {
     tryCatch({
       get_json(tipper_id) |>
@@ -67,7 +69,7 @@ get_tippers_table <- function(tippers_id) {
         pivot_wider(everything()) |>
         transmute(tipper_id = user_id, name, is_expert, is_author,
                   is_verified, num_followers = num_followers.total)
-    }, error = function(e) empty_tibble(column_names))
+    }, error = function(e) empty_tibble(column_names, column_types))
   })
 }
 
@@ -99,6 +101,8 @@ get_tippers_table <- function(tippers_id) {
 #' get_stats_table(tippers_id = c(184328, 184329))
 get_stats_table <- function(tippers_id) {
   column_names <- c("tipper_id", "league", "period", "win", "loss", "count")
+  column_types <- c("integer", "character", "character", "integer",
+                    "integer", "integer")
   map_dfr(tippers_id, function(tipper_id) {
     tryCatch({
       get_json(tipper_id) |>
@@ -116,7 +120,7 @@ get_stats_table <- function(tippers_id) {
         separate(name, into = c("league", "period", "stat"), sep = r"{\.}") |>
         pivot_wider(names_from = stat, values_from = value) |>
         rename(tipper_id = user_id)
-    }, error = function(e) empty_tibble(column_names))
+    }, error = function(e) empty_tibble(column_names, column_types))
   })
 }
 
@@ -147,6 +151,8 @@ get_stats_table <- function(tippers_id) {
 get_tips_table <- function(tippers_id) {
   column_names <- c("tip_id", "tipper_id", "game_id", "created_at",
                     "updated_at", "league", "tip_play", "tip_type")
+  column_types <- c("integer", "integer", "integer", "double",
+                    "double", "character", "character", "character")
   map_dfr(tippers_id, function(tipper_id) {
     tryCatch({
       get_json(tipper_id) |>
@@ -154,6 +160,6 @@ get_tips_table <- function(tippers_id) {
         transmute(tip_id = id, tipper_id = user_id, game_id,
                   created_at, updated_at, league = league_name,
                   tip_play = play, tip_type = type)
-    }, error = function(e) empty_tibble(column_names))
+    }, error = function(e) empty_tibble(column_names, column_types))
   })
 }
