@@ -10,6 +10,7 @@
 #' @importFrom rvest read_html html_node html_text
 #' @importFrom jsonlite fromJSON
 #' @importFrom purrr pluck
+#' @importFrom glue glue
 #' @importFrom tibble enframe
 #' @importFrom stringr str_count str_detect str_remove
 #' @importFrom tidyr pivot_wider pivot_longer separate
