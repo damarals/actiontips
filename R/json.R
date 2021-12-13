@@ -72,8 +72,6 @@ get_tippers_table <- function(tippers_id = NA, verbose = FALSE) {
         mutate_at(c(1, 6), ~ as.integer(.)) |>
         mutate_at(2, ~ as.character(.)) |>
         mutate_at(3:5, ~ as.logical(.)) |>
-        select(tipper_id, name, is_expert, is_author,
-               is_verified, num_followers)
     }, error = function(e) empty_tibble(column_names, column_types))
   }, .progress = verbose)
 }
