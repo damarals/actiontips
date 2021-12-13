@@ -3,7 +3,7 @@ library(actiontips)
 json <- get_json(184328)
 tipper <- get_tipper_table(json)
 stat <- get_stats_table(json)
-pick <- get_picks_table(json)
+tip <- get_tips_table(json)
 
 # duckdb connect memory sql
 library(DBI)
@@ -19,9 +19,10 @@ create_tbl_query <- function(df, p_keys) {
 
 dbExecute(con, create_tbl_query(tipper, p_keys = 1))
 dbExecute(con, create_tbl_query(stat, p_keys = 1:3))
-dbExecute(con, create_tbl_query(pick, p_keys = 1))
+dbExecute(con, create_tbl_query(tip, p_keys = 1))
 
-## Export Database
+## export database
 dbExecute(con, "EXPORT DATABASE 'data-raw'")
 
+## close connection
 dbDisconnect(con, shutdown = TRUE)
