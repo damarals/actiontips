@@ -4,10 +4,12 @@
 \alias{empty_tibble}
 \title{Create empty tibble}
 \usage{
-empty_tibble(column_names)
+empty_tibble(column_names, column_types)
 }
 \arguments{
 \item{column_names}{character vector with column names}
+
+\item{column_types}{character vector with column types}
 }
 \value{
 empty tibble object
@@ -17,5 +19,5 @@ This functions creates empty tibble with columns names specified
 as parameter.
 }
 \examples{
-empty_tibble(c("a", "b"))
+empty_tibble(c("a", "b"), c("character", "integer"))
 }
