@@ -12,7 +12,8 @@ stat <- actiontips::get_stats_table(tippers_id = 1:100, verbose = TRUE)
 tip <- actiontips::get_tips_table(tippers_id = 1:100, verbose = TRUE)
 
 # duckdb connect memory sql
-con <- pool::dbPool(drv = duckdb::duckdb(), dbdir = "data-raw/database.duckdb")
+library(DBI)
+con = dbConnect(drv = duckdb::duckdb(), dbdir = "data-raw/database.duckdb")
 
 # write in database
 dbWriteTable(con, "tipper", tipper, append = TRUE)
