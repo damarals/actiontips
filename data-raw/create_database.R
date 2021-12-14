@@ -1,12 +1,12 @@
 # generic data for create sql schema
 library(actiontips)
-tipper <- get_tippers_table(184328)
-stat <- get_stats_table(184328)
-tip <- get_tips_table(184328)
+tipper <- get_tippers_table(0)
+stat <- get_stats_table(0)
+tip <- get_tips_table(0)
 
 # duckdb connect memory sql
 library(DBI)
-con = dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
+con = dbConnect(drv = duckdb::duckdb(), dbdir = "data-raw/database.duckdb")
 
 ## create tables
 library(rlang)
